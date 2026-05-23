@@ -1,1 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteca Universitaria — Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sidebar-w: 240px; --navy: #0f1f3d; --navy-light: #1a3360;
+    --navy-border: #243a5e; --accent: #4f8ef7; --accent-hover: #2d6fe8;
+    --success: #22c55e; --warning: #f59e0b; --danger: #ef4444;
+    --bg: #f0f4fb; --surface: #ffffff; --surface2: #f8faff;
+    --border: #dde5f5; --text: #0f1f3d; --text-muted: #64748b;
+    --text-light: #94a3b8; --radius: 10px; --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(15,31,61,.08), 0 4px 16px rgba(15,31,61,.06);
+  }
+  body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); display:flex; min-height:100vh; font-size:14px; }
+  aside { width:var(--sidebar-w); background:var(--navy); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:100; }
+  .logo { padding:24px 20px 20px; border-bottom:1px solid var(--navy-border); }
+  .logo-icon { width:36px; height:36px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .logo h1 { font-size:14px; font-weight:700; color:#fff; line-height:1.3; }
+  .logo p { font-size:11px; color:#6b8cba; margin-top:2px; }
+  nav { padding:12px 10px; flex:1; }
+  .nav-label { font-size:10px; font-weight:600; color:#4a6a9a; text-transform:uppercase; letter-spacing:.08em; padding:8px 10px 6px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); cursor:pointer; color:#8aadd4; font-size:13.5px; font-weight:400; transition:all .15s; margin-bottom:2px; }
+  .nav-item:hover { background:rgba(79,142,247,.12); color:#c8daf7; }
+  .nav-item.active { background:rgba(79,142,247,.18); color:#fff; font-weight:500; }
+  .nav-item svg { width:18px; height:18px; flex-shrink:0; }
+  .nav-badge { margin-left:auto; background:var(--danger); color:white; font-size:10px; font-weight:700; padding:1px 6px; border-radius:20px; }
+  .sidebar-footer { padding:16px 20px; border-top:1px solid var(--navy-border); }
+  .sidebar-footer p { font-size:11px; color:#4a6a9a; }
+  main { margin-left:var(--sidebar-w); flex:1; padding:28px 32px; min-height:100vh; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; }
+  .topbar h2 { font-size:22px; font-weight:700; }
+  .topbar p { font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius-sm); border:none; cursor:pointer; font-family:'Outfit',sans-serif; font-size:13px; font-weight:500; transition:all .15s; }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { background:var(--accent-hover); }
+  .btn-sm { padding:5px 10px; font-size:12px; }
+  .btn-ghost { background:transparent; color:var(--text-muted); border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--surface2); }
+  .btn-danger { background:#fef2f2; color:var(--danger); border:1px solid #fecaca; }
+  .btn-danger:hover { background:#fee2e2; }
+  .btn-edit { background:#eff6ff; color:var(--accent); border:1px solid #bfdbfe; }
+  .btn-edit:hover { background:#dbeafe; }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow); }
+  .stat-label { font-size:12px; color:var(--text-muted); font-weight:500; text-transform:uppercase; letter-spacing:.04em; }
+  .stat-value { font-size:28px; font-weight:700; margin:4px 0 2px; }
+  .stat-sub { font-size:12px; color:var(--text-light); }
+  .stat-icon { float:right; width:38px; height:38px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+  .si-blue{background:#eff6ff} .si-green{background:#f0fdf4} .si-amber{background:#fffbeb} .si-red{background:#fef2f2}
+  .section { display:none; } .section.active { display:block; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+  .card-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+  .card-title { font-size:15px; font-weight:600; }
+  .search-bar { display:flex; gap:10px; align-items:center; }
+  .search-bar input, .search-bar select { padding:7px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:'Outfit',sans-serif; font-size:13px; color:var(--text); background:var(--surface2); outline:none; }
+  .search-bar input { width:220px; } .search-bar input:focus { border-color:var(--accent); }
+  table { width:100%; border-collapse:collapse; }
+  th { background:var(--surface2); padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--border); }
+  td { padding:11px 16px; font-size:13px; border-bottom:1px solid #f1f5ff; vertical-align:middle; }
+  tr:last-child td { border-bottom:none; } tr:hover td { background:#fafcff; }
+  .mono { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-muted); }
+  .actions { display:flex; gap:6px; }
+  .badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:600; }
+  .b-green{background:#dcfce7;color:#15803d} .b-blue{background:#dbeafe;color:#1d4ed8}
+  .b-amber{background:#fef3c7;color:#b45309} .b-red{background:#fee2e2;color:#b91c1c} .b-gray{background:#f1f5f9;color:#475569}
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,31,61,.45); z-index:200; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border-radius:14px; padding:28px; width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 20px 60px rgba(15,31,61,.2); }
+  .modal h3 { font-size:17px; font-weight:700; margin-bottom:20px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-group { margin-bottom:14px; }
+  .form-group label { display:block; font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:5px; text-transform:uppercase; letter-spacing:.04em; }
+  .form-group input, .form-group select { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:'Outfit',sans-serif; font-size:13px; color:var(--text); background:var(--surface2); outline:none; }
+  .form-group input:focus, .form-group select:focus { border-color:var(--accent); background:white; }
+  .modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; border-top:1px solid var(--border); padding-top:18px; }
+  .toast { position:fixed; bottom:28px; right:28px; background:var(--navy); color:white; padding:12px 20px; border-radius:var(--radius); font-size:13px; font-weight:500; z-index:300; transform:translateY(80px); opacity:0; transition:all .3s; box-shadow:0 8px 24px rgba(15,31,61,.3); }
+  .toast.show { transform:translateY(0); opacity:1; }
+  .toast.error { background:#b91c1c; }
+  .empty { text-align:center; padding:48px 20px; color:var(--text-muted); font-size:13px; }
+  .tag { display:inline-block; background:#f1f5ff; color:#3b5a9a; font-size:11px; padding:2px 8px; border-radius:4px; font-weight:500; }
+  .spinner { display:inline-block; width:16px; height:16px; border:2px solid #dde5f5; border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo">
+    <div class="logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
+    <h1>Biblioteca<br>Universitaria</h1>
+    <p>Sistema de Gestión</p>
+  </div>
+  <nav>
+    <div class="nav-label">Módulos</div>
+    <div class="nav-item active" onclick="showSection('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+    </div>
+    <div class="nav-item" onclick="showSection('libros',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>Libros
+    </div>
+    <div class="nav-item" onclick="showSection('usuarios',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Usuarios
+    </div>
+    <div class="nav-item" onclick="showSection('prestamos',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>Préstamos
+    </div>
+    <div class="nav-item" onclick="showSection('multas',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Multas
+      <span class="nav-badge" id="badge-multas">0</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer"><p>v1.0 — MySQL 8.x</p></div>
+</aside>
 
+<main>
+  <!-- DASHBOARD -->
+  <div class="section active" id="sec-dashboard">
+    <div class="topbar"><div><h2>Dashboard</h2><p>Resumen general del sistema</p></div></div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-icon si-blue" style="float:right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div><div class="stat-label">Total libros</div><div class="stat-value" id="stat-libros">—</div><div class="stat-sub" id="stat-libros-sub">cargando...</div></div>
+      <div class="stat-card"><div class="stat-icon si-green" style="float:right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="stat-label">Usuarios</div><div class="stat-value" id="stat-usuarios">—</div><div class="stat-sub">Registrados</div></div>
+      <div class="stat-card"><div class="stat-icon si-amber" style="float:right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="stat-label">Préstamos activos</div><div class="stat-value" id="stat-prestamos">—</div><div class="stat-sub" id="stat-vencidos">cargando...</div></div>
+      <div class="stat-card"><div class="stat-icon si-red" style="float:right"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="stat-label">Multas pendientes</div><div class="stat-value" id="stat-multas">—</div><div class="stat-sub" id="stat-multas-monto">cargando...</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card"><div class="card-header"><span class="card-title">Préstamos recientes</span></div><table><thead><tr><th>Usuario</th><th>Libro</th><th>Estado</th></tr></thead><tbody id="dash-prestamos"><tr><td colspan="3" class="empty"><div class="spinner"></div></td></tr></tbody></table></div>
+      <div class="card"><div class="card-header"><span class="card-title">Multas pendientes</span></div><table><thead><tr><th>Préstamo #</th><th>Monto</th><th>Estado</th></tr></thead><tbody id="dash-multas"><tr><td colspan="3" class="empty"><div class="spinner"></div></td></tr></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- LIBROS -->
+  <div class="section" id="sec-libros">
+    <div class="topbar"><div><h2>Libros</h2><p>Catálogo de la biblioteca</p></div>
+      <button class="btn btn-primary" onclick="openModal('modal-libro');document.getElementById('modal-libro-title').textContent='Agregar libro';document.getElementById('libro-edit-id').value=''">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar libro
+      </button>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title" id="libros-count">Libros</span>
+        <div class="search-bar"><input type="text" placeholder="Buscar por título o ISBN…" oninput="filterLibros(this.value)"></div>
+      </div>
+      <table><thead><tr><th>ISBN</th><th>Título</th><th>Autor(es)</th><th>Categoría</th><th>Editorial</th><th>Año</th><th>Acciones</th></tr></thead>
+      <tbody id="tabla-libros"><tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- USUARIOS -->
+  <div class="section" id="sec-usuarios">
+    <div class="topbar"><div><h2>Usuarios</h2><p>Miembros registrados</p></div>
+      <button class="btn btn-primary" onclick="openModal('modal-usuario');document.getElementById('modal-usuario-title').textContent='Agregar usuario';document.getElementById('usuario-edit-id').value=''">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar usuario
+      </button>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title" id="usuarios-count">Usuarios</span>
+        <div class="search-bar"><input type="text" placeholder="Buscar por nombre…" oninput="filterUsuarios(this.value)"></div>
+      </div>
+      <table><thead><tr><th>ID</th><th>Nombre</th><th>Apellido</th><th>Préstamos activos</th><th>Fecha registro</th><th>Acciones</th></tr></thead>
+      <tbody id="tabla-usuarios"><tr><td colspan="6" class="empty"><div class="spinner"></div></td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- PRÉSTAMOS -->
+  <div class="section" id="sec-prestamos">
+    <div class="topbar"><div><h2>Préstamos</h2><p>Registro de préstamos y devoluciones</p></div>
+      <button class="btn btn-primary" onclick="openModalPrestamo()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo préstamo
+      </button>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title" id="prestamos-count">Préstamos</span>
+        <div class="search-bar">
+          <select onchange="estadoPrestamo=this.value;renderPrestamos()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text)">
+            <option value="">Todos los estados</option><option value="activo">Activo</option><option value="devuelto">Devuelto</option><option value="vencido">Vencido</option>
+          </select>
+        </div>
+      </div>
+      <table><thead><tr><th>ID</th><th>Usuario</th><th>Libro</th><th>F. Préstamo</th><th>F. Límite</th><th>F. Devolución</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody id="tabla-prestamos"><tr><td colspan="8" class="empty"><div class="spinner"></div></td></tr></tbody></table>
+    </div>
+  </div>
+
+  <!-- MULTAS -->
+  <div class="section" id="sec-multas">
+    <div class="topbar"><div><h2>Multas</h2><p>Sanciones por devolución tardía</p></div></div>
+    <div class="card">
+      <div class="card-header"><span class="card-title" id="multas-count">Multas</span>
+        <div class="search-bar">
+          <select onchange="estadoMulta=this.value;renderMultas()" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-family:'Outfit',sans-serif;font-size:13px;outline:none;background:var(--surface2);color:var(--text)">
+            <option value="">Todos los estados</option><option value="pendiente">Pendiente</option><option value="pagada">Pagada</option>
+          </select>
+        </div>
+      </div>
+      <table><thead><tr><th>ID</th><th>Préstamo</th><th>Usuario</th><th>Libro</th><th>Monto (COP)</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody id="tabla-multas"><tr><td colspan="7" class="empty"><div class="spinner"></div></td></tr></tbody></table>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL LIBRO -->
+<div class="modal-overlay" id="modal-libro">
+  <div class="modal">
+    <h3 id="modal-libro-title">Agregar libro</h3>
+    <input type="hidden" id="libro-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>ISBN</label><input type="text" id="libro-isbn" placeholder="978-0-00-000000-0"></div>
+      <div class="form-group"><label>Año</label><input type="number" id="libro-anio" placeholder="2024" min="1800" max="2099"></div>
+    </div>
+    <div class="form-group"><label>Título</label><input type="text" id="libro-titulo" placeholder="Título del libro"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Categoría</label><select id="libro-categoria"></select></div>
+      <div class="form-group"><label>Editorial</label><select id="libro-editorial"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-libro')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveLibro()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="modal-overlay" id="modal-usuario">
+  <div class="modal">
+    <h3 id="modal-usuario-title">Agregar usuario</h3>
+    <input type="hidden" id="usuario-edit-id">
+    <div class="form-row">
+      <div class="form-group"><label>Nombre</label><input type="text" id="usuario-nombre"></div>
+      <div class="form-group"><label>Apellido</label><input type="text" id="usuario-apellido"></div>
+    </div>
+    <div class="form-group"><label>Fecha de registro</label><input type="date" id="usuario-fecha"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRÉSTAMO -->
+<div class="modal-overlay" id="modal-prestamo">
+  <div class="modal">
+    <h3>Registrar préstamo</h3>
+    <div class="form-group"><label>Usuario</label><select id="prestamo-usuario"></select></div>
+    <div class="form-group"><label>Libro (ejemplares disponibles)</label><select id="prestamo-libro"></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Fecha de préstamo</label><input type="date" id="prestamo-fecha"></div>
+      <div class="form-group"><label>Días de préstamo</label><input type="number" id="prestamo-dias" value="14" min="1" max="60"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-prestamo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePrestamo()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIGURACIÓN ─────────────────────────────────────────────────────────────
+// Cambia esta URL por la de tu backend en Railway después del deploy
+const API_URL = 'https://tu-api.up.railway.app';
+
+// ── ESTADO ────────────────────────────────────────────────────────────────────
+let estadoPrestamo = '';
+let estadoMulta = '';
+let librosCache = [];
+let usuariosCache = [];
+
+// ── API HELPER ────────────────────────────────────────────────────────────────
+async function api(path, options = {}) {
+  const res = await fetch(API_URL + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+    body: options.body ? JSON.stringify(options.body) : undefined
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Error en la petición');
+  return data;
+}
+
+// ── HELPERS UI ────────────────────────────────────────────────────────────────
+const fmt = d => d ? d.slice(0,10).split('-').reverse().join('/') : '—';
+const estadoBadge = e => {
+  const m={activo:'b-blue',devuelto:'b-green',vencido:'b-red',disponible:'b-green',prestado:'b-amber',mantenimiento:'b-gray',pendiente:'b-red',pagada:'b-green'};
+  return `<span class="badge ${m[e]||'b-gray'}">${e}</span>`;
+};
+
+function toast(msg, error=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (error?' error':'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='libros') renderLibros();
+  if(id==='usuarios') renderUsuarios();
+  if(id==='prestamos') renderPrestamos();
+  if(id==='multas') renderMultas();
+  if(id==='dashboard') renderDashboard();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.querySelectorAll(`#${id} input`).forEach(el=>{ if(el.type!=='hidden') el.value=''; });
+}
+
+// ── LIBROS ────────────────────────────────────────────────────────────────────
+async function renderLibros(filter='') {
+  const tb = document.getElementById('tabla-libros');
+  try {
+    const data = await api('/api/libros');
+    librosCache = data;
+    const filtered = filter ? data.filter(l=>
+      l.Titulo.toLowerCase().includes(filter.toLowerCase()) || l.ISBN.includes(filter)
+    ) : data;
+    document.getElementById('libros-count').textContent = filtered.length + ' libros';
+    tb.innerHTML = filtered.length ? filtered.map(l=>`
+      <tr>
+        <td class="mono">${l.ISBN}</td>
+        <td><strong>${l.Titulo}</strong></td>
+        <td><span class="tag">${l.autores||'—'}</span></td>
+        <td>${l.categoria||'—'}</td>
+        <td>${l.editorial||'—'}</td>
+        <td>${l.Anio_Publicacion||'—'}</td>
+        <td><div class="actions">
+          <button class="btn btn-sm btn-edit" onclick="editLibro(${l.Id_Libro})">Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteLibro(${l.Id_Libro})">Eliminar</button>
+        </div></td>
+      </tr>`).join('') : `<tr><td colspan="7" class="empty">No se encontraron libros</td></tr>`;
+  } catch(e) { tb.innerHTML=`<tr><td colspan="7" class="empty">Error al cargar: ${e.message}</td></tr>`; }
+}
+
+function filterLibros(v) { renderLibros(v); }
+
+async function openModalLibro() {
+  document.getElementById('modal-libro-title').textContent = 'Agregar libro';
+  document.getElementById('libro-edit-id').value = '';
+  await loadSelects();
+  openModal('modal-libro');
+}
+
+async function loadSelects() {
+  const [cats, eds] = await Promise.all([api('/api/categorias'), api('/api/editoriales')]);
+  document.getElementById('libro-categoria').innerHTML = cats.map(c=>`<option value="${c.Id_Categoria}">${c.Nombre_Categoria}</option>`).join('');
+  document.getElementById('libro-editorial').innerHTML = eds.map(e=>`<option value="${e.Id_Editorial}">${e.Nombre}</option>`).join('');
+}
+
+async function saveLibro() {
+  const id = document.getElementById('libro-edit-id').value;
+  const body = {
+    ISBN: document.getElementById('libro-isbn').value.trim(),
+    Titulo: document.getElementById('libro-titulo').value.trim(),
+    Anio_Publicacion: document.getElementById('libro-anio').value,
+    Id_Categoria: document.getElementById('libro-categoria').value,
+    Id_Editorial: document.getElementById('libro-editorial').value
+  };
+  if(!body.ISBN||!body.Titulo){ toast('⚠ Completa ISBN y título', true); return; }
+  try {
+    if(id) { await api(`/api/libros/${id}`, {method:'PUT', body}); toast('Libro actualizado'); }
+    else    { await api('/api/libros', {method:'POST', body}); toast('Libro agregado'); }
+    closeModal('modal-libro'); renderLibros(); renderDashboard();
+  } catch(e) { toast(e.message, true); }
+}
+
+async function editLibro(id) {
+  await loadSelects();
+  const l = librosCache.find(x=>x.Id_Libro===id);
+  if(!l) return;
+  document.getElementById('libro-edit-id').value = id;
+  document.getElementById('libro-isbn').value = l.ISBN;
+  document.getElementById('libro-titulo').value = l.Titulo;
+  document.getElementById('libro-anio').value = l.Anio_Publicacion;
+  document.getElementById('modal-libro-title').textContent = 'Editar libro';
+  openModal('modal-libro');
+}
+
+async function deleteLibro(id) {
+  if(!confirm('¿Eliminar este libro?')) return;
+  try {
+    await api(`/api/libros/${id}`, {method:'DELETE'});
+    toast('Libro eliminado'); renderLibros(); renderDashboard();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── USUARIOS ──────────────────────────────────────────────────────────────────
+async function renderUsuarios(filter='') {
+  const tb = document.getElementById('tabla-usuarios');
+  try {
+    const data = await api('/api/usuarios');
+    usuariosCache = data;
+    const filtered = filter ? data.filter(u=>(u.Nombre+' '+u.Apellido).toLowerCase().includes(filter.toLowerCase())) : data;
+    document.getElementById('usuarios-count').textContent = filtered.length + ' usuarios';
+    tb.innerHTML = filtered.length ? filtered.map(u=>`
+      <tr>
+        <td class="mono">${u.Id_Usuario}</td>
+        <td>${u.Nombre}</td>
+        <td>${u.Apellido}</td>
+        <td>${u.prestamos_activos>0?`<span class="badge b-blue">${u.prestamos_activos} activos</span>`:'<span class="badge b-gray">0</span>'}</td>
+        <td>${fmt(u.Fecha_Registro)}</td>
+        <td><div class="actions">
+          <button class="btn btn-sm btn-edit" onclick="editUsuario(${u.Id_Usuario})">Editar</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteUsuario(${u.Id_Usuario})">Eliminar</button>
+        </div></td>
+      </tr>`).join('') : `<tr><td colspan="6" class="empty">No se encontraron usuarios</td></tr>`;
+  } catch(e) { tb.innerHTML=`<tr><td colspan="6" class="empty">Error al cargar: ${e.message}</td></tr>`; }
+}
+
+function filterUsuarios(v) { renderUsuarios(v); }
+
+async function saveUsuario() {
+  const id = document.getElementById('usuario-edit-id').value;
+  const body = {
+    Nombre: document.getElementById('usuario-nombre').value.trim(),
+    Apellido: document.getElementById('usuario-apellido').value.trim(),
+    Fecha_Registro: document.getElementById('usuario-fecha').value || new Date().toISOString().split('T')[0]
+  };
+  if(!body.Nombre||!body.Apellido){ toast('⚠ Completa nombre y apellido', true); return; }
+  try {
+    if(id) { await api(`/api/usuarios/${id}`, {method:'PUT', body}); toast('Usuario actualizado'); }
+    else    { await api('/api/usuarios', {method:'POST', body}); toast('Usuario agregado'); }
+    closeModal('modal-usuario'); renderUsuarios(); renderDashboard();
+  } catch(e) { toast(e.message, true); }
+}
+
+function editUsuario(id) {
+  const u = usuariosCache.find(x=>x.Id_Usuario===id);
+  if(!u) return;
+  document.getElementById('usuario-edit-id').value = id;
+  document.getElementById('usuario-nombre').value = u.Nombre;
+  document.getElementById('usuario-apellido').value = u.Apellido;
+  document.getElementById('usuario-fecha').value = u.Fecha_Registro?.slice(0,10)||'';
+  document.getElementById('modal-usuario-title').textContent = 'Editar usuario';
+  openModal('modal-usuario');
+}
+
+async function deleteUsuario(id) {
+  if(!confirm('¿Eliminar este usuario?')) return;
+  try {
+    await api(`/api/usuarios/${id}`, {method:'DELETE'});
+    toast('Usuario eliminado'); renderUsuarios(); renderDashboard();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── PRÉSTAMOS ─────────────────────────────────────────────────────────────────
+async function renderPrestamos() {
+  const tb = document.getElementById('tabla-prestamos');
+  try {
+    const url = estadoPrestamo ? `/api/prestamos?estado=${estadoPrestamo}` : '/api/prestamos';
+    const data = await api(url);
+    document.getElementById('prestamos-count').textContent = data.length + ' préstamos';
+    tb.innerHTML = data.length ? data.map(p=>`
+      <tr>
+        <td class="mono">#${p.Id_Prestamo}</td>
+        <td>${p.usuario||'—'}</td>
+        <td>${p.libro||'—'}</td>
+        <td>${fmt(p.Fecha_Prestamo)}</td>
+        <td>${fmt(p.Fecha_Dev_Esp)}</td>
+        <td>${fmt(p.Fecha_Dev_Real)}</td>
+        <td>${estadoBadge(p.Estado)}</td>
+        <td>${p.Estado==='activo'||p.Estado==='vencido'
+          ?`<button class="btn btn-sm btn-ghost" onclick="registrarDevolucion(${p.Id_Prestamo})">Devolver</button>`
+          :''}</td>
+      </tr>`).join('') : `<tr><td colspan="8" class="empty">Sin préstamos</td></tr>`;
+  } catch(e) { tb.innerHTML=`<tr><td colspan="8" class="empty">Error al cargar: ${e.message}</td></tr>`; }
+}
+
+async function openModalPrestamo() {
+  const [usuarios, libros] = await Promise.all([api('/api/usuarios'), api('/api/libros')]);
+  document.getElementById('prestamo-usuario').innerHTML = usuarios.map(u=>`<option value="${u.Id_Usuario}">${u.Nombre} ${u.Apellido}</option>`).join('');
+  document.getElementById('prestamo-libro').innerHTML = libros.map(l=>`<option value="${l.Id_Libro}">${l.Titulo}</option>`).join('');
+  document.getElementById('prestamo-fecha').value = new Date().toISOString().split('T')[0];
+  openModal('modal-prestamo');
+}
+
+async function savePrestamo() {
+  const body = {
+    Id_Ejemplar: null,
+    Id_Libro: parseInt(document.getElementById('prestamo-libro').value),
+    Id_Usuario: parseInt(document.getElementById('prestamo-usuario').value),
+    Dias_Prestamo: parseInt(document.getElementById('prestamo-dias').value)||14
+  };
+  try {
+    await api('/api/prestamos', {method:'POST', body});
+    toast('Préstamo registrado');
+    closeModal('modal-prestamo'); renderPrestamos(); renderDashboard();
+  } catch(e) { toast(e.message, true); }
+}
+
+async function registrarDevolucion(id) {
+  if(!confirm('¿Registrar devolución de este préstamo?')) return;
+  try {
+    const res = await api(`/api/prestamos/${id}/devolver`, {method:'PUT', body:{multa_por_dia:1000}});
+    toast(res.mensaje); renderPrestamos(); renderMultas(); renderDashboard();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── MULTAS ────────────────────────────────────────────────────────────────────
+async function renderMultas() {
+  const tb = document.getElementById('tabla-multas');
+  try {
+    const url = estadoMulta ? `/api/multas?estado=${estadoMulta}` : '/api/multas';
+    const data = await api(url);
+    document.getElementById('multas-count').textContent = data.length + ' multas';
+    document.getElementById('badge-multas').textContent = data.filter(m=>m.Estado==='pendiente').length;
+    tb.innerHTML = data.length ? data.map(m=>`
+      <tr>
+        <td class="mono">#${m.Id_Multa}</td>
+        <td class="mono">#${m.Id_Prestamo}</td>
+        <td>${m.usuario||'—'}</td>
+        <td>${m.libro||'—'}</td>
+        <td><strong>$${Number(m.Monto).toLocaleString('es-CO')}</strong></td>
+        <td>${estadoBadge(m.Estado)}</td>
+        <td>${m.Estado==='pendiente'
+          ?`<button class="btn btn-sm btn-primary" onclick="pagarMulta(${m.Id_Multa})">Registrar pago</button>`
+          :''}</td>
+      </tr>`).join('') : `<tr><td colspan="7" class="empty">Sin multas</td></tr>`;
+  } catch(e) { tb.innerHTML=`<tr><td colspan="7" class="empty">Error al cargar: ${e.message}</td></tr>`; }
+}
+
+async function pagarMulta(id) {
+  if(!confirm('¿Registrar pago de esta multa?')) return;
+  try {
+    await api(`/api/multas/${id}/pagar`, {method:'PUT'});
+    toast('Multa registrada como pagada'); renderMultas(); renderDashboard();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+async function renderDashboard() {
+  try {
+    const [libros, usuarios, prestamos, multas] = await Promise.all([
+      api('/api/libros'), api('/api/usuarios'),
+      api('/api/prestamos'), api('/api/multas')
+    ]);
+    document.getElementById('stat-libros').textContent = libros.length;
+    document.getElementById('stat-libros-sub').textContent = 'títulos en catálogo';
+    document.getElementById('stat-usuarios').textContent = usuarios.length;
+    const activos  = prestamos.filter(p=>p.Estado==='activo').length;
+    const vencidos = prestamos.filter(p=>p.Estado==='vencido').length;
+    document.getElementById('stat-prestamos').textContent = activos;
+    document.getElementById('stat-vencidos').textContent = vencidos + ' vencidos';
+    const pendientes = multas.filter(m=>m.Estado==='pendiente');
+    document.getElementById('stat-multas').textContent = pendientes.length;
+    const total = pendientes.reduce((s,m)=>s+Number(m.Monto),0);
+    document.getElementById('stat-multas-monto').textContent = '$'+total.toLocaleString('es-CO')+' COP';
+    document.getElementById('badge-multas').textContent = pendientes.length;
+
+    document.getElementById('dash-prestamos').innerHTML = prestamos.slice(0,5).map(p=>`
+      <tr><td>${p.usuario||'—'}</td><td>${(p.libro||'—').substring(0,22)}…</td><td>${estadoBadge(p.Estado)}</td></tr>`
+    ).join('') || `<tr><td colspan="3" class="empty">Sin préstamos</td></tr>`;
+
+    document.getElementById('dash-multas').innerHTML = multas.slice(0,5).map(m=>`
+      <tr><td class="mono">#${m.Id_Prestamo}</td><td><strong>$${Number(m.Monto).toLocaleString('es-CO')}</strong></td><td>${estadoBadge(m.Estado)}</td></tr>`
+    ).join('') || `<tr><td colspan="3" class="empty">Sin multas</td></tr>`;
+  } catch(e) { console.error('Dashboard error:', e); }
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click', e=>{ if(e.target===o) closeModal(o.id); });
+});
+
+renderDashboard();
+</script>
+</body>
+</html>
